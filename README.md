@@ -11,3 +11,5 @@ There are no primitive datatypes. Everything is a class/object.
 - to() is defined in a class RichInt, a special type of Int
 - String is augmented by >100 methods in the class StringOps -- str1.intersect(str2)
 - BigInt is usable to make use of really big numbers
+
+There are no ++ or -- operators, instead use +=
