@@ -1,4 +1,4 @@
-package learning
+package learnscala
 
 import org.apache.spark.{SparkContext, SparkConf}
 
