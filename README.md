@@ -9,14 +9,19 @@ RDDs created in two ways:
   - use parallelize() method, not widely used since it requires entire dataset in memory on one machine
   - ```val lines = sc.parallelize(List("pandas", "i like pandas")) ```
 
-RDDs offer two kinds of operations:
-- Transformations
-- Actions
-
 To reuse an RDD in multiple actions, you may persist the RDD using 
 ```
 RDD.persist()
 ```
 
 cache() is the same as persist() with the default storage level.
+
+RDDs offer two kinds of operations:
+- Transformations
+  - Returns a new RDD, such as map(), filter()
+  - Return type: RDD
+- Actions
+  - Returns result to the driver, or write it to Storage, such as count(), first()
+  - Return type: Datatype other than an RDD
+
 
