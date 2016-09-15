@@ -14,3 +14,6 @@ To reuse an RDD in multiple actions, you may persist the RDD using
 ```
 RDD.persist()
 ```
+
+cache() is the same as persist() with the default storage level.
+
