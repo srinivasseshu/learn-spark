@@ -27,7 +27,7 @@ RDDs offer two kinds of operations:
 
 ### Transformations
 
-Transformation RDDs go through a "Lazy Evaluation", and get computed lazily only when you use them in an action.
+Transformation RDDs go through a "Lazy Evaluation", and get computed lazily only when you use them in an action. Although transformations are lazy, you can force Spark to execute them by running an action, such as count()
 
 Spark keeps track of different dependencies between RDDs using a "lineage graph". It uses this information to compute each RDD on demand and to recover lost data if part of a persistent RDD is lost.
 
@@ -39,7 +39,6 @@ badLinesRDD.take(10).foreach(println)
 collect() to retrieve an entire RDD. 
 - Mind that the entire dataset should fit in memory on a single machine to use collect().
 - Shouldn't be used on large datasets, rather save a large dataset using saveAsTextFile()
-
 
 
 
