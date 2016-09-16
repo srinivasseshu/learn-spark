@@ -11,8 +11,12 @@ object LearnScala {
   for(i <- 0 until nums.length) nums(i) = i * i
   nums
 
+  var anyArr = new Array[Any](10)
+  anyArr = Array("Srinivas", 5)
+
+
   // Use Array without "new" to specify initial values
-  // They type is inferred
+  // The type is inferred
   val a = Array("hello", "world")
 
   // Use parantheses to access the elements
@@ -154,7 +158,7 @@ object LearnScala {
     val indexes = for(i <- 0 until buf.length if(buf(i) < 0)) yield i
     val indexesToRemove = indexes.drop(1)
 
-    //As  the indexes are removed, it updates the indexes immediately within the array
+    //As the indexes are removed, it updates the indexes immediately within the array
     //So, reverse the indexes and remove from the reverse
     for(i <- indexesToRemove.reverse) buf.remove(i)
   }
@@ -173,7 +177,7 @@ object LearnScala {
   // *************************************************
 
   val in = new java.util.Scanner(new java.net.URL(
-    "http://www.tothenew.com/blog/wp-content/uploads/2015/01/Hello-World.txt").openStream)
+    "https://wordpress.org/plugins/about/readme.txt").openStream)
 
   // Using Mutable Map
   val count = scala.collection.mutable.Map[String, Int]()
@@ -184,7 +188,7 @@ object LearnScala {
   count.toString()
 
   val inp = new java.util.Scanner(new java.net.URL(
-    "http://www.tothenew.com/blog/wp-content/uploads/2015/01/Hello-World.txt").openStream)
+    "https://wordpress.org/plugins/about/readme.txt").openStream)
 
   // Using Immutable Map
   var immutable_count = scala.collection.immutable.Map[String, Int]()
