@@ -175,3 +175,31 @@ These implicits turn an RDD into various wrapper classes, such as
 - PairRDDFunctions (for key/value pairs), to expose additional functions such as mean() and variance().
 
 Implicits can be confusing. There is no mean() on an RDD, the call manages to succeed because of implicit conversions between RDD[Double] and DoubleRDDFunctions
+
+
+## Persistence (Caching)
+
+To avoid computing an RDD multiple times, we can persiste the data in Spark
+
+While persisting, the nodes that compute the RDD store their partitions. If a node that has data persisted on it fails, Spark will recompute the lost partitions of the data when needed. 
+
+Persistence levels:
+- MEMORY_ONLY
+- MEMORY_ONLY_SER
+- MEMORY_AND_DISK
+- MEMORY_AND_DISK_SER
+- DISK_ONLY
+
+```
+val result = input.map(x => x * x)
+result.persist(StorageLevel.DISK_ONLY)
+println(result.count())
+println(result.collect().mkString(","))
+```
+
+- Call persist() on the RDD before the first action
+- Call unpersist() to manually remove from the cache
+- Call cache() to use the default storage level, MEMORY_ONLY
+
+If you attempt to cache too much data to fit in memory, Spark will automatically evict old partitions using a Least Recently Used (LRU) cache policy.
+
