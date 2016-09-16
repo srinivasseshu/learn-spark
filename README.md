@@ -41,5 +41,11 @@ collect() to retrieve an entire RDD.
 - Shouldn't be used on large datasets, rather save a large dataset using saveAsTextFile()
 
 
+### Passing functions to Spark
+
+- Scala can pass functions defined inline, references to methods, or static functions.
+- The function we pass and the data referenced in it needs to be serializable (implementing Java’s Serializable interface).
+- Passing a method or field of an object includes a reference (this) to that whole object, instead extract the fields as local variables and avoid passing the whole object containing them
+
 
 
