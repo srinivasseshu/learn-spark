@@ -1,6 +1,6 @@
 # Learning Spark
 
-## Introduction of RDDs
+## RDDs
 
 RDDs created in two ways:
 - by loading an external dataset
@@ -25,7 +25,7 @@ RDDs offer two kinds of operations:
   - Return type: Datatype other than an RDD
 
 
-### Transformations
+## Transformations
 
 Transformation RDDs go through a "Lazy Evaluation", and get computed lazily only when you use them in an action. Although transformations are lazy, you can force Spark to execute them by running an action, such as count()
 
@@ -41,7 +41,7 @@ collect() to retrieve an entire RDD.
 - Shouldn't be used on large datasets, rather save a large dataset using saveAsTextFile()
 
 
-### Passing functions to Spark
+## Passing functions to Spark
 
 - Scala can pass functions defined inline, references to methods, or static functions.
 - The function we pass and the data referenced in it needs to be serializable (implementing Java’s Serializable interface).
@@ -49,9 +49,9 @@ collect() to retrieve an entire RDD.
 - If NotSerializableException occurs in Scala, a reference to a method or field in a nonserializable class is usually the problem
 
 
-### Common Transformations And Actions
+## Common Transformations And Actions
 
-#### Element-wise Transformations
+### Element-wise Transformations
 
 - map()
   - The return type doesn't have to be the same as the input type
@@ -74,7 +74,7 @@ words.first()  // returns "hello"
   - rdd.sample(false, 0.5)
   - Result is non-deterministic
 
-#### Pseudo Set Operations
+### Pseudo Set Operations
 
 - Require all the RDDs to be of the same data type
 - RDD1.distinct()
@@ -94,7 +94,7 @@ words.first()  // returns "hello"
   - Very expensive for large RDDs
 
 
-#### Actions
+## Actions
 
 - reduce()
   - Operates on 2 elements of the type in your RDD, and returns a new element of the same type
@@ -158,7 +158,7 @@ rdd.countByValue() returns {(1, 1), (2, 1), (3, 2)}
   - rdd.takeOrdered(2)(myOrdering)
 
 
-#### Converting between RDD types
+## Converting between RDD types
 
 Some functions are available only on certain types of RDDs.
 - mean() and variance() on numeric RDDs
