@@ -69,6 +69,30 @@ val words = lines.flatMap(line => line.split(" "))
 words.first()  // returns "hello"
 ```
 
+- sample(withReplacement, fraction, [seed])
+  - Sample an RDD with or without replacement
+  - rdd.sample(false, 0.5)
+  - Result is non-deterministic
+
+#### Pseudo Set Operations
+
+- Require all the RDDs to be of the same data type
+- RDD1.distinct()
+  - This is an expensive operation, shuffles all data over the network to identify the distinct
+- RDD1.union(RDD2)
+  - If input RDDs contain duplicates, the union() will contain duplicates
+- RDD1.intersection(RDD2)
+  - Removes all duplicates (including duplicates from a single RDD)
+  - Performance of intersection() is worse than union(), as it requires shuffle to identify common elements
+- RDD1.substract(RDD2)
+  - Performs shuffle like intersection(), hence expensive
+
+- RDD1.cartesian(RDD2)
+  - Both RDDs need not be of the same type
+  - Useful to consider similarity between all possible pairs, such as every user's expected interest in each offer
+  - Cartesian product of an RDD with itself, useful for tasks like user similarity
+  - Very expensive for large RDDs
+
 
 
 
