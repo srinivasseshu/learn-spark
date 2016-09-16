@@ -94,5 +94,25 @@ words.first()  // returns "hello"
   - Very expensive for large RDDs
 
 
+#### Actions
+
+- reduce()
+  - Operates on 2 elements of the type in your RDD, and returns a new element of the same type
+```
+val sum = rdd.reduce((x, y) => x + y)
+```
+
+- fold()
+  - Similar to reduce() with the same signature and return type
+  - In addition, it takes a "zero value" to be used for initial call on each partition
+  - "zero value" provided should be an identity element for your operation, that is applying multiple times with your function should not change the value (e.g., 0 for +, 1 for *, or an empty list for concatenation).
+  - **You can minimize object creation in fold() by modifying and returning the first of the two parameters in place. However, you should not modify the second parameter.**
+  - Return type is same as that of elements in the RDD. Works well for operations like sum, but not when we return a different type, like computing a running average.
 
 
+- aggregate()
+  - frees from the constraint of having the return be the same type as the RDD elements
+  - need to supply initial "zero value" of the type we want to return, like fold()
+  - then, supply a function to combine the elements from our RDD with the accumulator
+  - then, supply a second function to merge two accumulators, given that each node accumulates its own results locally
+- 
