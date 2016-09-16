@@ -55,10 +55,20 @@ collect() to retrieve an entire RDD.
 
 - map()
   - The return type doesn't have to be the same as the input type
-  - ```val input = sc.parallelize(List(1, 2, 3, 4))
-       val result = input.map(x => x * x)
-       println(result.collect().mkString(","))```
-- 
+```
+val input = sc.parallelize(List(1, 2, 3, 4))
+val result = input.map(x => x * x)
+println(result.collect().mkString(","))
+```
+
+- flatMap()
+  -  produce multiple output elements for each input element
+```
+val lines = sc.parallelize(List("hello world", "hi"))
+val words = lines.flatMap(line => line.split(" "))
+words.first()  // returns "hello"
+```
+
 
 
 
