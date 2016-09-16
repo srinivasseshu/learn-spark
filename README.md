@@ -103,16 +103,75 @@ val sum = rdd.reduce((x, y) => x + y)
 ```
 
 - fold()
+  - fold(zero)(func)
   - Similar to reduce() with the same signature and return type
   - In addition, it takes a "zero value" to be used for initial call on each partition
   - "zero value" provided should be an identity element for your operation, that is applying multiple times with your function should not change the value (e.g., 0 for +, 1 for *, or an empty list for concatenation).
   - **You can minimize object creation in fold() by modifying and returning the first of the two parameters in place. However, you should not modify the second parameter.**
   - Return type is same as that of elements in the RDD. Works well for operations like sum, but not when we return a different type, like computing a running average.
-
+```
+rdd.fold(0)((x, y) => x + y)
+```
 
 - aggregate()
+  - aggregate(zeroValue)(seqOp, combOp) 
   - frees from the constraint of having the return be the same type as the RDD elements
   - need to supply initial "zero value" of the type we want to return, like fold()
-  - then, supply a function to combine the elements from our RDD with the accumulator
-  - then, supply a second function to merge two accumulators, given that each node accumulates its own results locally
-- 
+  - then, supply a function to combine the elements from our RDD with the **accumulator**
+  - then, supply a second function to **merge two accumulators**, given that each node accumulates its own results locally
+  - Example, average of an RDD can be computed as
+```
+val result = input.aggregate((0, 0))(
+               (acc, value) => (acc._1 + value, acc._2 + 1),
+               (acc1, acc2) => (acc1._1 + acc2._1, acc1._2 + acc2._2))
+val avg = result._1 / result._2.toDouble
+```
+
+- take(n)
+  - Returns n elements from the RDD and attempts to minimize the number of partitions it access
+  - May not return the elements in the order you might expect
+
+- top()
+  - If there is an ordering defined on the data, we can extract top elements using top()
+  - uses default ordering, but can supply our own comparison function to extract top elements
+
+- takeSample(withReplacement, num, seed)
+  - take a sample of our data either with or without replacement
+  - similar to sample(withReplacement, num, seed), but sample() returns an RDD, takeSample() returns the elements
+
+- foreach()
+  - this action performs computation on each element in the RDD without bringing it back locally
+
+- count()
+  - returns a count of elements
+
+- countByValue()
+  - returns a map of each unique value to its count
+  - Number of times each element occurs in the RDD
+```
+If input RDD has {1, 2, 3, 3}
+rdd.countByValue() returns {(1, 1), (2, 1), (3, 2)}
+```
+
+- takeOrdered(num)(ordering)
+  - Return num elements based on provided ordering
+  - rdd.takeOrdered(2)(myOrdering)
+
+
+#### Converting between RDD types
+
+Some functions are available only on certain types of RDDs.
+- mean() and variance() on numeric RDDs
+- join() on key/value pair RDDs
+
+In Scala, the conversion to RDDs with special functions (e.g., to expose numeric functions on an RDD[Double]) is handled automatically using implicit conversions.
+Need to import below for these conversions to work.
+```
+import org.apache.spark.SparkContext._ 
+```
+
+These implicits turn an RDD into various wrapper classes, such as 
+- DoubleRDDFunctions (for RDDs of numeric data) 
+- PairRDDFunctions (for key/value pairs), to expose additional functions such as mean() and variance().
+
+Implicits can be confusing. There is no mean() on an RDD, the call manages to succeed because of implicit conversions between RDD[Double] and DoubleRDDFunctions
