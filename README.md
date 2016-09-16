@@ -218,9 +218,116 @@ val pairs = lines.map(x => (x.split(" ")(0), x))
 In Scala, for the functions on keyed data to be available, we also need to return tuples. An implicit conversion on RDDs of tuples exists to provide the additional key/value functions.
 
 
+```
+var l = scala.collection.mutable.ListBuffer[(String, Int)]()
+l += (("x", 1))
+l += (("x", 1),("x",2))
+l += (("y", 1))
+val pairs = sc.parallelize(l)
+val agg = pairs.reduceByKey((x,y) => x+y)
+
+scala> agg.collect
+res8: Array[(String, Int)] = Array((x,4), (y,1))
+```
+
+### Transformations on One Pair RDD
+
+For example, assume pair RDD input is: {(1, 2), (3, 4), (3, 6)}
 - reduceByKey(func)
   - Combine values with the same key.
-  - rdd.reduceByKey((x, y) => x + y)
+```
+rdd.reduceByKey((x, y) => x + y)
+Result is {(1, 2), (3, 10)}
+```
+
+- groupByKey()
+  - Group values with the same key.
+```
+rdd.groupByKey()
+Result is {(1, [2]), (3, [4, 6])}
+```
+
+- combineByKey(createCombiner, mergeValue, mergeCombiners, partitioner)
+  - Combine values with the same key using a different result type
+
+- mapValues(func)
+  - Apply a function to each value of a pair RDD without changing the key
+```
+rdd.mapValues(x => x+1)
+Result is {(1, 3), (3, 5), (3, 7)}
+```
+
+- flatMapValues(func)
+  - Apply a function that returns an iterator to each value of a pair RDD, and for each element returned, produce a key/value entry with the old key. Often used for tokenization.
+```
+rdd.flatMapValues(x => (x to 5))
+Result is {(1, 2), (1, 3), (1, 4), (1, 5), (3, 4), (3, 5)}
+```
+
+- keys()
+  - Return an RDD of just the keys.
+```
+rdd.keys()
+Result is {1, 3, 3}
+```
+
+- values()
+  - Return an RDD of just the values.
+```
+rdd.values()
+Result is {2, 4, 6}
+```
+
+- sortByKey()
+  - Return an RDD sorted by the key.
+```
+rdd.sortByKey()
+Result is {(1, 2), (3, 4), (3, 6)}
+```
+
+
+### Transformations on Two Pair RDDs
+
+
+For example, assume two pair RDDs input is: (rdd = {(1, 2), (3, 4), (3, 6)} other = {(3, 9)})
+- subtractByKey()
+  - Remove elements with a key present in the other RDD.
+```
+rdd.subtractByKey(other)
+Result is {(1, 2)}
+```
+
+- join()
+  - Perform an inner join between two RDDs
+```
+rdd.join(other)
+Result is {(3, (4, 9)), (3, (6, 9))}
+```
+
+- rightOuterJoin()
+  - Perform a join between two RDDs where the key must be present in the first RDD
+```
+rdd.rightOuterJoin(other)
+Result is {(3,(Some(4),9)), (3,(Some(6),9))}
+```
+
+- leftOuterJoin()
+  - Perform a join between two RDDs where the key must be present in the other RDD
+```
+rdd.leftOuterJoin(other)
+Result is {(1,(2,None)), (3,(4,Some(9))), (3,(6,Some(9)))}
+```
+
+- cogroup()
+  - Group data from both RDDs sharing the same key
+```
+rdd.cogroup(other)
+Result is {(1,([2],[])), (3,([4, 6],[9]))}
+```
+
+
+
+
 
 
 
