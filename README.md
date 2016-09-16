@@ -46,6 +46,19 @@ collect() to retrieve an entire RDD.
 - Scala can pass functions defined inline, references to methods, or static functions.
 - The function we pass and the data referenced in it needs to be serializable (implementing Java’s Serializable interface).
 - Passing a method or field of an object includes a reference (this) to that whole object, instead extract the fields as local variables and avoid passing the whole object containing them
+- If NotSerializableException occurs in Scala, a reference to a method or field in a nonserializable class is usually the problem
+
+
+### Common Transformations And Actions
+
+#### Element-wise Transformations
+
+- map()
+  - The return type doesn't have to be the same as the input type
+  - ```val input = sc.parallelize(List(1, 2, 3, 4))
+       val result = input.map(x => x * x)
+       println(result.collect().mkString(","))```
+- 
 
 
 
