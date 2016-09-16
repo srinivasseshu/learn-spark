@@ -203,3 +203,26 @@ println(result.collect().mkString(","))
 
 If you attempt to cache too much data to fit in memory, Spark will automatically evict old partitions using a Least Recently Used (LRU) cache policy.
 
+
+## Transformations on Pair RDDs
+
+Spark lets users control the layout of pair RDDs across nodes using "partitioning". 
+
+Pair RDDs 
+- RDDs containing key/value pairs, called tuples
+- There are number of ways to get pair RDDs
+- Can create by calling SparkContext.parallelize() on a collection of pairs
+```
+val pairs = lines.map(x => (x.split(" ")(0), x))
+```
+In Scala, for the functions on keyed data to be available, we also need to return tuples. An implicit conversion on RDDs of tuples exists to provide the additional key/value functions.
+
+
+- reduceByKey(func)
+  - Combine values with the same key.
+  - rdd.reduceByKey((x, y) => x + y)
+
+
+
+
+
