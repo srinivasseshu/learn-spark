@@ -377,6 +377,19 @@ Also, this can be done faster by:
 input.flatMap(x => x.split(" ")).countByValue()
 ```
 
+### Transformations on Two Pair RDDs
+
+- combineByKey()
+  - Most general of the per-key aggregation functions
+  - Most of the other per-key combiners are implemented using it
+  - Like aggregate(), combineByKey() need not return the same type as the input data
+  - As combineByKey() goes through the elements in a partition, each element either has a key it hasn’t seen before or has the same key as a previous element.
+    - If it’s a new element, combineByKey() uses a function we provide, called **createCombiner()**, to create the initial value for the accumulator on that key. This happens the first time a key is found in each partition, rather than only the first time the key is found in the RDD.
+    - If it is a key we have seen before while processing that partition, it will instead use the provided function, **mergeValue()**, with the current value for the accumulator for that key and the new value.
+  - Since each partition is processed independently, we can have multiple accumulators for the same key. When merging the results from all partitions, if two or more partitions have an accumulator for the same key, we merge the accumulators using the user-supplied **mergeCombiners()** function.
+
+
+
 
 
 
