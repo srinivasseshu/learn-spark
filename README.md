@@ -84,9 +84,8 @@ words.first()  // returns "hello"
 - RDD1.intersection(RDD2)
   - Removes all duplicates (including duplicates from a single RDD)
   - Performance of intersection() is worse than union(), as it requires shuffle to identify common elements
-- RDD1.substract(RDD2)
+- RDD1.subtract(RDD2)
   - Performs shuffle like intersection(), hence expensive
-
 - RDD1.cartesian(RDD2)
   - Both RDDs need not be of the same type
   - Useful to consider similarity between all possible pairs, such as every user's expected interest in each offer
