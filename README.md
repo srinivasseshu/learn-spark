@@ -217,14 +217,12 @@ In Scala, for the functions on keyed data to be available, we also need to retur
 
 ```
 var l = scala.collection.mutable.ListBuffer[(String, Int)]()
-l += (("x", 1))
-l += (("x", 1),("x",2))
-l += (("y", 1))
+l += (("x", 1),("x",2),("y", 1))
 val pairs = sc.parallelize(l)
 val agg = pairs.reduceByKey((x,y) => x+y)
 
 scala> agg.collect
-res8: Array[(String, Int)] = Array((x,4), (y,1))
+res8: Array[(String, Int)] = Array((x,3), (y,1))
 ```
 
 ### Transformations on One Pair RDD
@@ -387,6 +385,26 @@ input.flatMap(x => x.split(" ")).countByValue()
     - If it’s a new element, combineByKey() uses a function we provide, called **createCombiner()**, to create the initial value for the accumulator on that key. This happens the first time a key is found in each partition, rather than only the first time the key is found in the RDD.
     - If it is a key we have seen before while processing that partition, it will instead use the provided function, **mergeValue()**, with the current value for the accumulator for that key and the new value.
   - Since each partition is processed independently, we can have multiple accumulators for the same key. When merging the results from all partitions, if two or more partitions have an accumulator for the same key, we merge the accumulators using the user-supplied **mergeCombiners()** function.
+  - Map-side aggregation can be disabled in combineByKey() if we know that our data won’t benefit from it. For example, groupByKey() disables map-side aggregation as the aggregation function (appending to a list) does not save any space. To disable map-side combines, specify a partitioner; for now just use the partitioner on the source RDD by passing _rdd.partitioner_
+
+
+Per-key average using combineByKey()
+```
+var l = scala.collection.mutable.ListBuffer[(Int, Int)]()
+l += ((1, 2), (3, 4), (3, 6))
+val input = sc.parallelize(l)
+
+val result = input.combineByKey(
+  (v) => (v, 1),
+  (acc: (Int, Int), v) => (acc._1 + v, acc._2 + 1),
+  (acc1: (Int, Int), acc2: (Int, Int)) => (acc1._1 + acc2._1, acc1._2 + acc2._2)
+  ).map{ case (key, value) => (key, value._1 / value._2.toFloat) }
+
+scala>   result.collectAsMap().map(println(_))
+(1,2.0)
+(3,5.0)
+```
+
 
 
 
