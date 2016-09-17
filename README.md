@@ -328,7 +328,7 @@ Pair RDDs are still RDDs, and hence support the same functions as RDDs
 pairs.filter{case (key, value) => value.length < 20}
 ```
 
-** Spark function mapValues(func) is the same as map{case (x,y) => (x, func(y)) } **
+**Spark function mapValues(func) is the same as map{case (x,y) => (x, func(y)) }**
 
 
 
