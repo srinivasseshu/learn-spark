@@ -361,3 +361,20 @@ panda   1                           panda   (1,1)
 pink    4                           pink    (4,1)
 ```
 
+reduceByKey() and foldByKey() will automatically perform combining locally on each machine before computing global totals for each key. The user does not need to specify a combiner. The more general combineByKey() interface allows you to customize combining behavior.
+
+Word Count example can be implemented as:
+```
+val input = sc.textFile("s3://...")
+val words = input.flatMap(x => x.split(" "))
+val result = words.map(x => (x, 1)).reduceByKey((x, y) => x + y)
+```
+Also, this can be done faster by:
+```
+input.flatMap(x => x.split(" ")).countByValue()
+```
+
+
+
+
+
