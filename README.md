@@ -328,12 +328,34 @@ Pair RDDs are still RDDs, and hence support the same functions as RDDs
 pairs.filter{case (key, value) => value.length < 20}
 ```
 
-**Spark function mapValues(func) is the same as map{case (x,y) => (x, func(y)) }**
+Also,
+- mapValues(func) is the same as map{case (x,y) => (x, func(y)) }
+- reduceByKey() is quite similar to reduce()
+  - reduceByKey() runs several parallel reduce operations, one for each key in the dataset
+- foldByKey() is quite similar to fold()
+  -  both use a zero value of the same type of the data in our RDD and combination function
 
 
+Average of an RDD can be calculated using map() and fold() functions
+```
+val input = sc.parallelize(List(1, 2, 3, 4))
+scala> val result = input.map(x => (x,1)).fold(0,0)((x,y) => (x._1+y._1,x._2+y._2))
+res22: (Int, Int) = (10,4)
+val avg = result._1 / result._2.toDouble
+```
 
+Similarly, per-key average of a Pair RDD can be calculated using mapValues() and reduceByKey() functions
+```
+rdd.mapValues(x => (x,1)).reduceByKey((x,y) => (x._1 + y._1, x._2 + y._2))
+```
 
-
-
-
+Example for above:
+```
+key,  value                         key,    value                           key,    value
+panda   0                           panda   (0,1)                           panda   (1,2)
+pink    3         mapValues()       pink    (3,1)       reduceByKey()       pink    (7,2)
+pirate  3       -------------->     pirate  (3,1)     ----------------->    pirate  (3,1)
+panda   1                           panda   (1,1)
+pink    4                           pink    (4,1)
+```
 
