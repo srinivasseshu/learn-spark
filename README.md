@@ -294,6 +294,7 @@ Result is {(1, 2)}
 
 - join()
   - Perform an inner join between two RDDs
+  - when we have multiple entries for each key in both the RDDs, we get the Cartesian product between the two lists of values
 ```
 rdd.join(other)
 Result is {(3, (4, 9)), (3, (6, 9))}
@@ -375,7 +376,7 @@ Also, this can be done faster by:
 input.flatMap(x => x.split(" ")).countByValue()
 ```
 
-### Transformations on Two Pair RDDs
+### Combining by Key
 
 - combineByKey()
   - Most general of the per-key aggregation functions
@@ -438,7 +439,72 @@ def mergeCombiners(acc1, acc2):
   (acc1[0] + acc2[0], acc1[1] + acc2[1])
 ```
 
+#### Tuning the level of Parallelism
 
+Every RDD has a fixed number of partitions that determine the degree of parallelism to use when executing operations on the RDD.
+
+When performing aggregations or grouping operations, we can ask Spark to use a specific number of partitions. Spark will always try to infer a sensible default value based on the size of your cluster, but in some cases you will want to tune the level of parallelism for better performance.
+
+```
+val data = Seq(("a", 3), ("b", 4), ("a", 1))
+sc.parallelize(data).reduceByKey((x, y) => x + y)         // Default parallelism
+sc.parallelize(data).reduceByKey(((x, y) => x + y),10)    // Custom parallelism
+```
+
+We can change the partitioning of an RDD outside the context of grouping and aggregation operations.
+- repartition()
+  - Shuffles data across the network to create new set of partitions
+  - This is an expensive operation
+
+- coalesce()
+  - optimized version of repartition()
+  - avoids data movement, but only if you are decreasing the number of RDD partitions
+
+- rdd.partitions.size()
+  - Check the partitions size of the RDD
+
+
+#### Grouping Data
+
+- groupByKey()
+  - On an RDD consisting of keys of type K and values of type V, we get back an RDD of type [K, Iterable[V]]
+
+- groupBy()
+  - works on unpaired data or data where we want to use a different condition besides equality on the current key
+  - It takes a function that it applies to every element in the source RDD and uses the result to determine the key
+```
+val x = sc.parallelize(Array("Joseph", "Jimmy", "Tina","Thomas", "James", "Cory","Christine", "Jackeline", "Juan"), 3)
+val y = x.groupBy(word => word.charAt(0))
+
+scala> y.collect
+res0: Array[(Char, Iterable[String])] = Array((T,CompactBuffer(Tina, Thomas)), (C,CompactBuffer(Cory,Christine)), (J,CompactBuffer(Joseph, Jimmy, James, Jackeline, Juan)))
+```
+
+- cogroup()
+  - groups data sharing the same key from multiple RDDs 
+  - two RDDs sharing the same key type, K, with the respective value types V and W gives us back RDD[(K, (Iterable[V], Iterable[W]))]
+  - If one of the RDDs doesn’t have elements for a given key that is present in the other RDD, the corresponding Iterable is empty
+  - cogroup() is used as a building block for the joins, intersect by key
+  - cogroup() can work on 3 or more RDDs at once
+
+Remember that, if you're using groupByKey() and then use a reduce() or fold() on the values, it is more efficient to use one of the per-key aggregation functions to achieve the same result. Rather than reducing the RDD to an in-memory value, we reduce the data per key and get back an RDD with the reduced values corresponding to each key. For example, rdd.reduceByKey(func) produces the same RDD as rdd.groupByKey().mapValues(value => value.reduce(func)) but is more efficient as it avoids the step of creating a list of values for each key.
+
+#### Sorting Data
+
+We can sort an RDD with key/value pairs provided that there is an ordering defined on the key. Any subsequent call on the sorted data to collect() or save() will result in ordered data.
+
+- sortByKey(ascending)
+  - "ascending" param defaults to true
+  - accepts a custom sort order
+
+```
+val input: RDD[(Int, Venue)] = ...
+implicit val sortIntegersByString = new Ordering[Int] {
+  override def compare(a: Int, b: Int) = a.toString.compare(b.toString)
+}
+rdd.sortByKey()
+```
+[Custom sortByKey Example](http://apachesparkbook.blogspot.com/2015/12/sortbykey-example.html)
 
 
 
