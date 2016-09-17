@@ -101,8 +101,7 @@ words.first()  // returns "hello"
 val sum = rdd.reduce((x, y) => x + y)
 ```
 
-- fold()
-  - fold(zero)(func)
+- fold(zero)(func)
   - Similar to reduce() with the same signature and return type
   - In addition, it takes a "zero value" to be used for initial call on each partition
   - "zero value" provided should be an identity element for your operation, that is applying multiple times with your function should not change the value (e.g., 0 for +, 1 for *, or an empty list for concatenation).
@@ -112,8 +111,7 @@ val sum = rdd.reduce((x, y) => x + y)
 rdd.fold(0)((x, y) => x + y)
 ```
 
-- aggregate()
-  - aggregate(zeroValue)(seqOp, combOp) 
+- aggregate(zeroValue)(seqOp, combOp) 
   - frees from the constraint of having the return be the same type as the RDD elements
   - need to supply initial "zero value" of the type we want to return, like fold()
   - then, supply a function to combine the elements from our RDD with the **accumulator**
