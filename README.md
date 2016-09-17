@@ -405,7 +405,38 @@ scala>   result.collectAsMap().map(println(_))
 (3,5.0)
 ```
 
+Example:
+```
+Partition1        Partition2
+key,  value       key,   value
+coffee  1         coffee   9
+coffee  2
+panda   3
 
+Partition1 Trace:
+(coffee,1) -> new key
+accumulators[coffee] = createCombiner(1)
+(coffee,2) -> existing key
+accumulators[coffee] = mergeValue(accumulators[coffee],2)
+(panda,3) -> new key
+accumulators[panda] = createCombiner(3)
+
+Partition2 Trace:
+(coffee,9) -> new key
+accumulators[coffee] = createCombiner(9)
+
+Merge Partitions:
+mergeCombiners(partition1.accumulators[coffee],partition2.accumulators[coffee])
+
+def createCombiner(value):
+  (value, 1)
+
+def mergeValue(acc, value):
+  (acc[0] + value, acc[1] + 1)
+
+def mergeCombiners(acc1, acc2):
+  (acc1[0] + acc2[0], acc1[1] + acc2[1])
+```
 
 
 
