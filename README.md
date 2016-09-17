@@ -323,6 +323,8 @@ Result is {(1,([2],[])), (3,([4, 6],[9]))}
 ```
 
 
+#### Similarities between RDD functions and Pair RDD functions
+
 Pair RDDs are still RDDs, and hence support the same functions as RDDs
 ```
 pairs.filter{case (key, value) => value.length < 20}
