@@ -338,6 +338,7 @@ Also,
   -  both use a zero value of the same type of the data in our RDD and combination function
 
 
+#### Average Example
 Average of an RDD can be calculated using map() and fold() functions
 ```
 val input = sc.parallelize(List(1, 2, 3, 4))
@@ -363,7 +364,9 @@ pink    4                           pink    (4,1)
 
 reduceByKey() and foldByKey() will automatically perform combining locally on each machine before computing global totals for each key. The user does not need to specify a combiner. The more general combineByKey() interface allows you to customize combining behavior.
 
-Word Count example can be implemented as:
+#### Word Count Example
+
+Can be implemented as:
 ```
 val input = sc.textFile("s3://...")
 val words = input.flatMap(x => x.split(" "))
