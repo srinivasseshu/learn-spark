@@ -504,7 +504,7 @@ implicit val sortIntegersByString = new Ordering[Int] {
 }
 rdd.sortByKey()
 ```
-[Custom sortByKey Example](http://apachesparkbook.blogspot.com/2015/12/sortbykey-example.html)
+[Custom sortByKey() Example](http://apachesparkbook.blogspot.com/2015/12/sortbykey-example.html)
 
 
 #### Actions on Pair RDDs
