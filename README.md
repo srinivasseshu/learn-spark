@@ -507,5 +507,37 @@ rdd.sortByKey()
 [Custom sortByKey Example](http://apachesparkbook.blogspot.com/2015/12/sortbykey-example.html)
 
 
+#### Actions on Pair RDDs
+
+All of the traditional actions available on the base RDD are also available on pair RDDs
+
+For example, assume pair RDD input is: {(1, 2), (3, 4), (3, 6)}
+
+- countByKey()
+  - Count the number of elements for each key.
+```
+rdd.countByKey()
+result: {(1, 1), (3, 2)}
+```
+
+- collectAsMap()
+  - Collect the result as a map to provide easy lookup.
+```
+rdd.collectAsMap()
+result: Map{(1, 2), (3, 4), (3, 6)}
+```
+
+- lookup(key)
+  - Return all values associated with the provided key.
+```
+rdd.lookup(3)
+result: [4, 6]
+```
+
+
+
+
+
+
 
 
