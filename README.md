@@ -535,7 +535,138 @@ result: [4, 6]
 ```
 
 
+### Data Partitioning
 
+Partitioning will not be helpful in all applications—for example, if a given RDD is scanned only once, there is no point in partitioning it in advance. It is useful only when a dataset is reused multiple times in key-oriented operations such as joins.
+
+Spark’s partitioning is available on all RDDs of key/value pairs, and causes the system to group elements based on a function of each key. 
+
+Spark Partitioning lets the program ensure that a set of keys will appear together on some node. For example,
+- Hash Parititon
+  - RDD hashed into 100 partitions so that keys that have the same hash value modulo 100 appear on the same node
+- Range Partition
+  - RDD partitioned into sorted ranges of keys so that elements with keys in the same range appear on the same node
+
+
+Example:
+
+userData RDD of (UserID, UserInfo) pairs
+  - UserInfo contains a list of topics the user subscribed to
+  - Large Table
+
+events RDD of (UserID, LinkInfo) pairs 
+  - table of for users who have clicked a link on a website in five minutes
+  - smaller file 
+  - periodically joins this table with the userData every five minutes
+
+Usecase: Count how many users visited a link that was not to one of their subscribed topics
+
+_Approach1_
+```
+// Initialization code; we load the user info from a Hadoop SequenceFile on HDFS.
+val sc = new SparkContext(...)
+val userData = sc.sequenceFile[UserID, UserInfo]("hdfs://...").persist()
+
+// Function called periodically to process a logfile of events in the past 5 minutes;
+// we assume that this is a SequenceFile containing (UserID, LinkInfo) pairs.
+def processNewLogs(logFileName: String) {
+  val events = sc.sequenceFile[UserID, LinkInfo](logFileName)
+  val joined = userData.join(events)// RDD of (UserID, (UserInfo, LinkInfo)) pairs
+  val offTopicVisits = joined.filter {
+    case (userId, (userInfo, linkInfo)) => // Expand the tuple into its components
+      !userInfo.topics.contains(linkInfo.topic)
+  }.count()
+  println("Number of visits to non-subscribed topics: " + offTopicVisits)
+}
+```
+
+- This approach is inefficient
+- join() operation called each time processNewLogs() is invoked (every 5 minutes, in this case), does not know anything about how the keys are partitioned in the datasets
+- By default, hashes all the keys of both datasets across the network to perform the join()
+- userData table is hashed and shuffled across the network on every call, even though it doesn’t change.
+
+
+_Approach2_
+
+- Use partitionBy()
+```
+val sc = new SparkContext(...)
+val userData = sc.sequenceFile[UserID, UserInfo]("hdfs://...")
+                 .partitionBy(new HashPartitioner(100))   // Create 100 partitions
+                 .persist()
+```
+
+- The processNewLogs() method remains unchanged
+- events RDD is local to processNewLogs(), and called only once within this method, so no advantage in specifying a partitioner for events.
+- Because of the partitionBy() when building userData, Spark will now know that it is hash-partitioned, and calls to join() on it will take advantage of this information.
+- when we call userData.join(events), Spark will shuffle only the events RDD
+- less data is communicated over the network, and the program runs significantly faster
+
+
+- partitionBy(new HashPartitioner(100)) 
+  - transformation, always returns a new RDD
+  - doesn't change original RDD
+  - important to persist(), to avoid partitionBy() being called over and over again in subsequent use of original RDD
+  - 100, number of partitions, make this at least as large as the number of cores in the cluster
+
+
+Many Spark operations automatically result in an RDD with known partitioning information, and many operations other than join() will take advantage of this information. For example, 
+- sortByKey() will result in range-partitioned RDDs
+- groupByKey() will result in hash-partitioned RDDs
+- map(), on the other hand, causes the new RDD to forget the parent’s partitioning information, because such operations could theoretically modify the key of each record
+
+
+#### Determining an RDD’s Partitioner
+
+- partitioner
+  - determines how an RDD is partitioned
+  - returns a **scala.Option object, which is a Scala class for a container that may or may not contain one item**
+
+```
+scala> val pairs = sc.parallelize(List((1, 1), (2, 2), (3, 3)))
+pairs: spark.RDD[(Int, Int)] = ParallelCollectionRDD[0] at parallelize at <console>:12
+
+scala> pairs.partitioner
+res0: Option[spark.Partitioner] = None
+
+scala> val partitioned = pairs.partitionBy(new org.apache.spark.HashPartitioner(2))
+partitioned: spark.RDD[(Int, Int)] = ShuffledRDD[1] at partitionBy at <console>:14
+
+scala> partitioned.partitioner
+res1: Option[spark.Partitioner] = Some(spark.HashPartitioner@5147788d)
+```
+
+#### Operations That Benefit from Partitioning
+
+cogroup(), groupWith(), join(), leftOuterJoin(), rightOuterJoin(), groupByKey(), reduceByKey(), combineByKey(), lookup()
+
+For single RDD operations, such as reduceByKey(), running on a pre-partitioned RDD will cause all the values for each key to be computed locally on a single machine.
+
+For binary RDD operations, such as cogroup() and join(), pre-partitioning will cause at least one of the RDDs (the one with the known partitioner) to not be shuffled. If both RDDs have the same partitioner, and if they are cached on the same machines or if one of them has not yet been computed, then no shuffling across the network will occur.
+
+
+#### Operations That Affect Partitioning
+
+- Spark internally sets the partitioner on RDDs created by operations that partition the data. 
+  - Example, for join() Spark knows that the result is hash-partitioned, and operations like reduceByKey() on the join result are going to be significantly faster.
+
+- For transformations that do not produce a known partitioning, the output RDD will NOT have a partitioner set. 
+  - Example, for map() on a hash-partitioned RDD of key/value pairs, the function passed to map() may change the key of each element, so the result will not have a partitioner. 
+
+- Spark does not analyze your functions to check whether they retain the key. 
+  - Instead, it provides two other operations, mapValues() and flatMapValues(), which guarantee that each tuple’s key remains the same.
+
+Below operations that result in a partitioner being set on the output RDD: 
+- cogroup(), groupWith(), join(), leftOuterJoin(), rightOuterJoin(), groupByKey(), reduceByKey(), combineByKey(), partitionBy(), sort()
+- mapValues() (if the parent RDD has a partitioner)
+- flatMapValues() (if parent has a partitioner)
+- filter() (if parent has a partitioner). 
+- All other operations will produce a result with no partitioner
+
+For binary operations, "which" partitioner is set on the output depends on the parent RDDs’ partitioners.
+- By default, it is a hash partitioner, with the number of partitions set to the level of parallelism of the operation.
+- If one of the parents has a partitioner set, it will be that partitioner.
+- If both parents have a partitioner set, it will be the partitioner of the first parent.
 
 
 
